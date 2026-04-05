@@ -246,7 +246,10 @@
     <section class="panel hidden" id="step-2">
       <h2>2단계. 1번 바구니와 2번 바구니로 분류하기</h2>
       <p>
-        아래 버튼을 눌러 버섯을 1번 바구니 또는 2번 바구니에 담아 보세요.
+        버섯의 특징과 원시인의 결과를 참고하여, 결과가 비슷하다고 생각되는 버섯끼리 1번 바구니와 2번 바구니에 담아 보세요.
+      </p>
+      <p class="legend">
+        처음부터 완벽하게 나누지 않아도 됩니다. 먼저 여러분의 기준으로 나누고, 나중에 그 기준이 결과를 잘 설명하는지 확인해 봅시다.
       </p>
       <div class="mushroom-grid" id="sorting-list"></div>
 
@@ -259,6 +262,10 @@
           <h3>2번 바구니</h3>
           <div id="basket2-list"></div>
         </div>
+      </div>
+
+      <div class="feedback" id="sorting-feedback">
+        아직 바구니를 분석하지 않았습니다.
       </div>
 
       <div class="actions">
@@ -410,6 +417,7 @@
       basket1Review.innerHTML = basket1El.innerHTML;
       basket2Review.innerHTML = basket2El.innerHTML;
 
+      updateSortingFeedback();
       updateFeatureFeedback();
     }
 
@@ -439,11 +447,44 @@
       return `색깔: ${colors}<br>무늬: ${patterns}<br>길이: ${lengths}<br>결과: ${results}`;
     }
 
+    function updateSortingFeedback() {
+      const box = document.getElementById('sorting-feedback');
+
+      if (!basket1.length && !basket2.length) {
+        box.innerHTML = '아직 바구니를 분석하지 않았습니다.';
+        return;
+      }
+
+      const basket1Deaths = countFeature(basket1, 'result', '죽음');
+      const basket1Lives = countFeature(basket1, 'result', '생존');
+      const basket2Deaths = countFeature(basket2, 'result', '죽음');
+      const basket2Lives = countFeature(basket2, 'result', '생존');
+
+      let feedback = `<strong>분류 기준 점검</strong><br>`;
+      feedback += `1번 바구니: 죽음 ${basket1Deaths}개, 생존 ${basket1Lives}개<br>`;
+      feedback += `2번 바구니: 죽음 ${basket2Deaths}개, 생존 ${basket2Lives}개<br><br>`;
+
+      const basket1Mixed = basket1Deaths > 0 && basket1Lives > 0;
+      const basket2Mixed = basket2Deaths > 0 && basket2Lives > 0;
+
+      if (basket1Mixed || basket2Mixed) {
+        feedback += `두 바구니 중 하나 이상에 <strong>죽음과 생존이 함께</strong> 들어 있습니다.<br>`;
+        feedback += `색깔만으로 나누었는지, 점 유무나 길이도 함께 봐야 하는지 다시 생각해 보세요.`;
+      } else {
+        feedback += `지금 분류는 결과를 비교적 잘 나누고 있습니다.<br>`;
+        feedback += `이제 각 바구니에서 어떤 특징이 반복되는지 찾아보세요.`;
+      }
+
+      box.innerHTML = feedback;
+    }
+
     function updateFeatureFeedback() {
       const box = document.getElementById('feature-feedback');
       box.innerHTML = `
         <strong>1번 바구니 요약</strong><br>${summarizeBasket(basket1)}<br><br>
-        <strong>2번 바구니 요약</strong><br>${summarizeBasket(basket2)}
+        <strong>2번 바구니 요약</strong><br>${summarizeBasket(basket2)}<br><br>
+        <strong>생각해 보기</strong><br>
+        색깔만으로 설명이 되나요? 점 있음/없음, 길이와 함께 보면 더 잘 설명되나요?
       `;
     }
 
@@ -503,7 +544,13 @@
 
     document.getElementById('go-step-2').addEventListener('click', () => showStep(2));
     document.getElementById('back-step-1').addEventListener('click', () => showStep(1));
-    document.getElementById('go-step-3').addEventListener('click', () => showStep(3));
+    document.getElementById('go-step-3').addEventListener('click', () => {
+      if (!basket1.length || !basket2.length) {
+        alert('두 바구니에 버섯을 나누어 담아 주세요.');
+        return;
+      }
+      showStep(3);
+    });
     document.getElementById('back-step-2').addEventListener('click', () => showStep(2));
     document.getElementById('go-step-4').addEventListener('click', () => showStep(4));
     document.getElementById('back-step-3').addEventListener('click', () => showStep(3));
